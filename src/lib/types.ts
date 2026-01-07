@@ -147,7 +147,34 @@ export interface DomainVerifyResult {
   verified: boolean;
   cnameTarget?: string | null;
   error?: string | null;
-  details?: string | null;
+  expected?: string | null;
+  found?: string | null;
+}
+
+export interface LinkDomain {
+  id: string;
+  name: string;
+}
+
+export interface LinkItem {
+  id: string;
+  name: string;
+  url: string;
+  slug: string;
+  domainId?: string | null;
+  domain?: LinkDomain | null;
+  teamId?: string | null;
+  userId?: string | null;
+  createdAt?: string | Date | null;
+  updatedAt?: string | Date | null;
+  deletedAt?: string | Date | null;
+}
+
+export interface LinkFormData {
+  name: string;
+  url: string;
+  slug: string;
+  domainId?: string | null;
 }
 
 export interface RealtimeData {

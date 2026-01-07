@@ -5,26 +5,20 @@ export interface DNSInstructions {
   ttl: number;
 }
 
-export function getInstanceHostname(): string {
-  const envHost = process.env.NEXT_PUBLIC_UMAMI_HOST || process.env.UMAMI_HOST;
+export function getInstanceHostname(fallbackHost?: string): string {
+  const browserHost = globalThis?.location?.hostname;
+  if (browserHost) {
+    return browserHost;
+  }
+
+  const envHost = process.env.UMAMI_HOST;
   if (envHost) {
     return envHost;
   }
 
-  const linksUrl = process.env.NEXT_PUBLIC_LINKS_URL || process.env.LINKS_URL;
-  if (linksUrl) {
-    try {
-      const url = new URL(linksUrl);
-      return url.hostname;
-    } catch (e) {
-      console.warn('Could not parse LINKS_URL, using localhost');
-      return 'localhost';
-    }
-  }
-
-  const browserHost = globalThis?.location?.hostname;
-  if (browserHost) {
-    return browserHost;
+  if (fallbackHost) {
+    console.warn('UMAMI_HOST not configured, using request host for DNS verification');
+    return fallbackHost;
   }
 
   console.warn('UMAMI_HOST not configured, using localhost for DNS verification');

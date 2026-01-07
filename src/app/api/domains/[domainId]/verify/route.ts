@@ -22,7 +22,9 @@ export async function POST(
   }
 
   const domain = await getDomain(domainId);
-  const result = await verifyDomainDNS(domain.name);
+  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+  const requestHost = forwardedHost || request.headers.get('host') || undefined;
+  const result = await verifyDomainDNS(domain.name, requestHost);
 
   await updateDomainVerification(domainId, result.verified);
 
@@ -30,6 +32,7 @@ export async function POST(
     verified: result.verified,
     cnameTarget: result.cnameTarget,
     error: result.error,
-    details: result.details,
+    expected: result.expected,
+    found: result.found,
   });
 }

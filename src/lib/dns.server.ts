@@ -10,7 +10,8 @@ export interface DNSVerificationResult {
   verified: boolean;
   cnameTarget?: string;
   error?: string;
-  details?: string;
+  expected?: string;
+  found?: string;
 }
 
 function normalizeHostname(hostname: string) {
@@ -23,13 +24,6 @@ function getErrorCode(error: unknown): string | undefined {
     return code ? String(code) : undefined;
   }
   return undefined;
-}
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return String(error);
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
@@ -57,49 +51,49 @@ async function resolveCnameForServer(domain: string, server: string) {
 }
 
 async function resolveCnamePublic(domain: string) {
-  const errors: string[] = [];
   const codes: string[] = [];
 
   for (const server of PUBLIC_DNS_SERVERS) {
     try {
       const records = await resolveCnameForServer(domain, server);
       if (records.length > 0) {
-        return { records, server, errors, codes };
+        return { records, codes };
       }
-      errors.push(`${server}: empty response`);
+      codes.push('ENODATA');
     } catch (error: unknown) {
       const code = getErrorCode(error);
       codes.push(code || 'UNKNOWN');
-      errors.push(`${server}: ${code || 'UNKNOWN'} ${getErrorMessage(error)}`);
     }
   }
 
-  return { records: [] as string[], errors, codes };
+  return { records: [] as string[], codes };
 }
 
-export async function verifyDomainDNS(domain: string): Promise<DNSVerificationResult> {
-  const instanceHost = getInstanceHostname();
+export async function verifyDomainDNS(
+  domain: string,
+  fallbackHost?: string,
+): Promise<DNSVerificationResult> {
+  const instanceHost = getInstanceHostname(fallbackHost);
   const normalizedInstance = normalizeHostname(instanceHost);
 
   try {
-    const { records: cnameRecords, errors, codes } = await resolveCnamePublic(domain);
+    const { records: cnameRecords, codes } = await resolveCnamePublic(domain);
 
     if (!cnameRecords || cnameRecords.length === 0) {
       const hasOnlyNotFound = codes.length > 0 && codes.every(code => NOT_FOUND_CODES.has(code));
-      const details = errors.length > 0 ? errors.join(' | ') : undefined;
+      const hasTimeout = codes.some(code => code === 'ETIMEOUT');
 
       if (!codes.length || hasOnlyNotFound) {
         return {
           verified: false,
-          error: 'Domain not configured',
-          details: `No CNAME record found. Please add CNAME record pointing to ${instanceHost}`,
+          error: 'domain-not-configured',
+          expected: instanceHost,
         };
       }
 
       return {
         verified: false,
-        error: 'DNS lookup failed',
-        details,
+        error: hasTimeout ? 'dns-lookup-timeout' : 'dns-lookup-failed',
       };
     }
 
@@ -117,23 +111,23 @@ export async function verifyDomainDNS(domain: string): Promise<DNSVerificationRe
     return {
       verified: false,
       cnameTarget,
-      error: 'CNAME points to wrong target',
-      details: `Found: ${normalizedTargets.join(', ')}, Expected: ${normalizedInstance}`,
+      error: 'domain-cname-mismatch',
+      expected: normalizedInstance,
+      found: normalizedTargets.join(', '),
     };
   } catch (error: unknown) {
     const code = getErrorCode(error);
     if (code && NOT_FOUND_CODES.has(code)) {
       return {
         verified: false,
-        error: 'Domain not configured',
-        details: `No CNAME record found. Please add CNAME record pointing to ${instanceHost}`,
+        error: 'domain-not-configured',
+        expected: instanceHost,
       };
     }
 
     return {
       verified: false,
-      error: 'DNS lookup failed',
-      details: getErrorMessage(error),
+      error: code === 'ETIMEOUT' ? 'dns-lookup-timeout' : 'dns-lookup-failed',
     };
   }
 }

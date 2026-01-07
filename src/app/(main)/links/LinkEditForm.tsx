@@ -6,16 +6,20 @@ import {
   FormSubmitButton,
   Icon,
   Label,
+  ListItem,
   Loading,
   Row,
+  Select,
+  Text,
   TextField,
 } from '@umami/react-zen';
 import { useEffect, useState } from 'react';
-import { useConfig, useLinkQuery, useMessages } from '@/components/hooks';
+import { useLinkQuery, useMessages, useSlug, useUserDomainsQuery } from '@/components/hooks';
+import { Empty } from '@/components/common/Empty';
 import { useUpdateQuery } from '@/components/hooks/queries/useUpdateQuery';
 import { RefreshCw } from '@/components/icons';
-import { LINKS_URL } from '@/lib/constants';
 import { getRandomChars } from '@/lib/generate';
+import type { LinkFormData } from '@/lib/types';
 import { isValidUrl } from '@/lib/url';
 
 const generateId = () => getRandomChars(9);
@@ -39,12 +43,23 @@ export function LinkEditForm({
       teamId,
     },
   );
-  const { linksUrl } = useConfig();
-  const hostUrl = linksUrl || LINKS_URL;
+  const { getSlugUrl } = useSlug('link');
   const { data, isLoading } = useLinkQuery(linkId);
+  const activeTeamId = teamId ?? data?.teamId ?? undefined;
+  const [domainSearch, setDomainSearch] = useState('');
   const [slug, setSlug] = useState(generateId());
+  const [selectedDomainId, setSelectedDomainId] = useState<string>('none');
+  const { data: domainResult, isLoading: isDomainsLoading } = useUserDomainsQuery(
+    { teamId: activeTeamId },
+    { search: domainSearch, page: 1, pageSize: 50 },
+  );
+  const domains = domainResult?.data || [];
+  const domainOptions = [
+    { id: 'none', name: formatMessage(labels.none) },
+    ...domains.map(domain => ({ id: domain.id, name: domain.name })),
+  ];
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: LinkFormData) => {
     await mutateAsync(data, {
       onSuccess: async () => {
         toast(formatMessage(messages.saved));
@@ -76,12 +91,39 @@ export function LinkEditForm({
     }
   }, [data]);
 
+  useEffect(() => {
+    if (data?.domainId) {
+      setSelectedDomainId(data.domainId);
+    } else {
+      setSelectedDomainId('none');
+    }
+  }, [data?.domainId]);
+
+  const handleDomainChange = (
+    value: string,
+    setValue: (name: string, value: unknown, options?: { shouldDirty?: boolean }) => void,
+  ) => {
+    setSelectedDomainId(value);
+    setValue('domainId', value === 'none' ? null : value, { shouldDirty: true });
+  };
+
+  const selectedDomain =
+    selectedDomainId !== 'none'
+      ? domains.find(domain => domain.id === selectedDomainId) ?? data?.domain
+      : null;
+  const selectedDomainName = selectedDomain?.name || formatMessage(labels.none);
+  const slugUrl = getSlugUrl(slug, selectedDomain?.name);
+
   if (linkId && isLoading) {
     return <Loading placement="absolute" />;
   }
 
   return (
-    <Form onSubmit={handleSubmit} error={getErrorMessage(error)} defaultValues={{ slug, ...data }}>
+    <Form
+      onSubmit={handleSubmit}
+      error={getErrorMessage(error)}
+      defaultValues={{ slug, domainId: data?.domainId ?? null, ...data }}
+    >
       {({ setValue }) => {
         return (
           <>
@@ -111,11 +153,37 @@ export function LinkEditForm({
               <input type="hidden" />
             </FormField>
 
+            <FormField label={formatMessage(labels.domain)} name="domainId">
+              <Select
+                items={domainOptions}
+                value={selectedDomainId}
+                isLoading={isDomainsLoading}
+                allowSearch={true}
+                searchValue={domainSearch}
+                onSearch={setDomainSearch}
+                onOpenChange={() => setDomainSearch('')}
+                onChange={value => handleDomainChange(value, setValue)}
+                renderValue={() => (
+                  <Row maxWidth="240px">
+                    <Text truncate>{selectedDomainName}</Text>
+                  </Row>
+                )}
+                listProps={{
+                  renderEmptyState: () => <Empty message={formatMessage(messages.noResultsFound)} />,
+                  style: { maxHeight: '400px' },
+                }}
+              >
+                {({ id, name }: { id: string; name: string }) => (
+                  <ListItem key={id}>{name}</ListItem>
+                )}
+              </Select>
+            </FormField>
+
             <Column>
               <Label>{formatMessage(labels.link)}</Label>
               <Row alignItems="center" gap>
                 <TextField
-                  value={`${hostUrl}/${slug}`}
+                  value={slugUrl}
                   autoComplete="off"
                   isReadOnly
                   allowCopy

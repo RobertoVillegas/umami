@@ -11,7 +11,12 @@ export function LinkHeader() {
 
   return (
     <PageHeader title={link.name} description={link.url} icon={<Link />}>
-      <LinkButton href={getSlugUrl(link.slug)} target="_blank" prefetch={false} asAnchor>
+      <LinkButton
+        href={getSlugUrl(link.slug, link.domain?.name)}
+        target="_blank"
+        prefetch={false}
+        asAnchor
+      >
         <IconLabel icon={<ExternalLink />} label={formatMessage(labels.view)} />
       </LinkButton>
     </PageHeader>

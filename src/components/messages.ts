@@ -445,6 +445,22 @@ export const messages = defineMessages({
     id: 'message.domain-verification-failed',
     defaultMessage: 'Domain verification failed.',
   },
+  domainNotConfigured: {
+    id: 'message.domain-not-configured',
+    defaultMessage: 'No CNAME record found. Please add a CNAME record pointing to {expected}.',
+  },
+  domainCnameMismatch: {
+    id: 'message.domain-cname-mismatch',
+    defaultMessage: 'CNAME points to {found}. Expected {expected}.',
+  },
+  dnsLookupFailed: {
+    id: 'message.dns-lookup-failed',
+    defaultMessage: 'DNS lookup failed. Please try again.',
+  },
+  dnsLookupTimeout: {
+    id: 'message.dns-lookup-timeout',
+    defaultMessage: 'DNS lookup timed out. Please try again.',
+  },
   domainAvailable: {
     id: 'message.domain-available',
     defaultMessage: 'This domain is available and can be added.',

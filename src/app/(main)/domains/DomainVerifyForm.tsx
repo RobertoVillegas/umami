@@ -8,11 +8,13 @@ import {
   Loading,
   Row,
   TextField,
+  useToast,
 } from '@umami/react-zen';
+import type { MessageDescriptor } from 'react-intl';
 import { useEffect, useState } from 'react';
-import { useDomainQuery, useMessages, useApi } from '@/components/hooks';
+import { useDomainQuery, useMessages, useApi, useModified } from '@/components/hooks';
 import { RefreshCw } from '@/components/icons';
-import { getInstanceHostname, parseDomain, getDNSInstructions } from '@/lib/dns';
+import { getDNSInstructions } from '@/lib/dns';
 import type { ApiError, DomainVerifyResult } from '@/lib/types';
 
 export function DomainVerifyForm({
@@ -27,11 +29,26 @@ export function DomainVerifyForm({
   const { formatMessage, labels, messages, getErrorMessage } = useMessages();
   const { data, isLoading, refetch } = useDomainQuery(domainId);
   const { post } = useApi();
+  const { touch } = useModified();
+  const { toast } = useToast();
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<DomainVerifyResult | null>(null);
 
   const dnsInstructions = data ? getDNSInstructions(data.name) : null;
-  const instanceHost = getInstanceHostname();
+
+  const errorMessages: Record<string, MessageDescriptor> = {
+    'domain-not-configured': messages.domainNotConfigured,
+    'domain-cname-mismatch': messages.domainCnameMismatch,
+    'dns-lookup-failed': messages.dnsLookupFailed,
+    'dns-lookup-timeout': messages.dnsLookupTimeout,
+  };
+  const errorDescriptor = verifyResult?.error ? errorMessages[verifyResult.error] : undefined;
+  const errorMessage = errorDescriptor
+    ? formatMessage(errorDescriptor, {
+        expected: verifyResult?.expected || '',
+        found: verifyResult?.found || '',
+      })
+    : verifyResult?.error;
 
   const handleVerify = async () => {
     setIsVerifying(true);
@@ -43,6 +60,13 @@ export function DomainVerifyForm({
 
       if (result.verified) {
         refetch();
+        touch('domains');
+        if (domainId) {
+          touch(`domain:${domainId}`);
+        }
+        toast(formatMessage(messages.domainVerified));
+        onSave?.();
+        onClose?.();
       }
     } catch (error: unknown) {
       const message = getErrorMessage(error as ApiError) || formatMessage(messages.error);
@@ -116,12 +140,7 @@ export function DomainVerifyForm({
               <Label style={{ color: 'red' }}>
                 {formatMessage(messages.domainVerificationFailed)}
               </Label>
-              {verifyResult.error && (
-                <Label>{verifyResult.error}</Label>
-              )}
-              {verifyResult.details && (
-                <Label>{verifyResult.details}</Label>
-              )}
+              {errorMessage && <Label>{errorMessage}</Label>}
             </>
           )}
         </Column>

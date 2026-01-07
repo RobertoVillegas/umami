@@ -1,4 +1,4 @@
-import type { ReactQueryOptions } from '@/lib/types';
+import type { LinkItem, ReactQueryOptions } from '@/lib/types';
 import { useApi } from '../useApi';
 import { useModified } from '../useModified';
 import { usePagedQuery } from '../usePagedQuery';
@@ -7,7 +7,7 @@ export function useLinksQuery({ teamId }: { teamId?: string }, options?: ReactQu
   const { modified } = useModified('links');
   const { get } = useApi();
 
-  return usePagedQuery({
+  return usePagedQuery<LinkItem[]>({
     queryKey: ['links', { teamId, modified }],
     queryFn: pageParams => {
       return get(teamId ? `/teams/${teamId}/links` : '/links', pageParams);

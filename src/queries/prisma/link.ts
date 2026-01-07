@@ -11,6 +11,11 @@ export async function getLink(linkId: string) {
     where: {
       id: linkId,
     },
+    include: {
+      domain: {
+        select: { id: true, name: true },
+      },
+    },
   });
 }
 
@@ -27,7 +32,19 @@ export async function getLinks(criteria: Prisma.LinkFindManyArgs, filters: Query
     ]),
   };
 
-  return pagedQuery('link', { ...criteria, where }, filters);
+  return pagedQuery(
+    'link',
+    {
+      ...criteria,
+      where,
+      include: {
+        domain: {
+          select: { id: true, name: true },
+        },
+      },
+    },
+    filters,
+  );
 }
 
 export async function getUserLinks(userId: string, filters?: QueryFilters) {
