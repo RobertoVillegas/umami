@@ -11,8 +11,9 @@ export function DomainAddButton({ teamId }: { teamId?: string }) {
     <DialogButton
       icon={<Plus />}
       label={formatMessage(labels.addDomain)}
+      title={formatMessage(labels.addDomain)}
       variant="primary"
-      width="600px"
+      width="500px"
     >
       {({ close }) => <DomainEditForm teamId={teamId} onClose={close} />}
     </DialogButton>

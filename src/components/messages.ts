@@ -332,9 +332,25 @@ export const labels = defineMessages({
   links: { id: 'label.links', defaultMessage: 'Links' },
   pixel: { id: 'label.pixel', defaultMessage: 'Pixel' },
   pixels: { id: 'label.pixels', defaultMessage: 'Pixels' },
+  domains: { id: 'label.domains', defaultMessage: 'Domains' },
   addBoard: { id: 'label.add-board', defaultMessage: 'Add board' },
   addLink: { id: 'label.add-link', defaultMessage: 'Add link' },
   addPixel: { id: 'label.add-pixel', defaultMessage: 'Add pixel' },
+  addDomain: { id: 'label.add-domain', defaultMessage: 'Add domain' },
+  verifyDomain: { id: 'label.verify-domain', defaultMessage: 'Verify domain' },
+  primaryDomain: { id: 'label.primary-domain', defaultMessage: 'Primary domain' },
+  dnsInstructions: { id: 'label.dns-instructions', defaultMessage: 'DNS Configuration' },
+  dnsDescription: {
+    id: 'label.dns-description',
+    defaultMessage: 'Add the following DNS record to your domain provider:',
+  },
+  dnsType: { id: 'label.dns-type', defaultMessage: 'Type' },
+  dnsName: { id: 'label.dns-name', defaultMessage: 'Name' },
+  dnsValue: { id: 'label.dns-value', defaultMessage: 'Value' },
+  dnsPropagation: {
+    id: 'label.dns-propagation',
+    defaultMessage: 'Note: DNS changes may take up to 24 hours to propagate.',
+  },
   maximize: { id: 'label.maximize', defaultMessage: 'Maximize' },
   remaining: { id: 'label.remaining', defaultMessage: 'Remaining' },
   conversion: { id: 'label.conversion', defaultMessage: 'Conversion' },
@@ -420,6 +436,22 @@ export const messages = defineMessages({
   invalidDomain: {
     id: 'message.invalid-domain',
     defaultMessage: 'Invalid domain. Do not include http/https.',
+  },
+  domainVerified: {
+    id: 'message.domain-verified',
+    defaultMessage: 'Domain verified successfully!',
+  },
+  domainVerificationFailed: {
+    id: 'message.domain-verification-failed',
+    defaultMessage: 'Domain verification failed.',
+  },
+  domainAvailable: {
+    id: 'message.domain-available',
+    defaultMessage: 'This domain is available and can be added.',
+  },
+  domainUnavailable: {
+    id: 'message.domain-unavailable',
+    defaultMessage: 'This domain is already registered by another user.',
   },
   resetWebsiteWarning: {
     id: 'message.reset-website-warning',

@@ -10,7 +10,7 @@ import {
 import Link from 'next/link';
 import type { Key } from 'react';
 import { useGlobalState, useMessages, useNavigation } from '@/components/hooks';
-import { Globe, Grid2x2, LinkIcon, PanelLeft } from '@/components/icons';
+import { Globe, Grid2x2, LinkIcon, Network, PanelLeft } from '@/components/icons';
 import { LanguageButton } from '@/components/input/LanguageButton';
 import { NavButton } from '@/components/input/NavButton';
 import { PanelButton } from '@/components/input/PanelButton';
@@ -41,6 +41,12 @@ export function SideNav(props: SidebarProps) {
       label: formatMessage(labels.pixels),
       path: '/pixels',
       icon: <Grid2x2 />,
+    },
+    {
+      id: 'domains',
+      label: formatMessage(labels.domains),
+      path: '/domains',
+      icon: <Network />,
     },
   ];
 
