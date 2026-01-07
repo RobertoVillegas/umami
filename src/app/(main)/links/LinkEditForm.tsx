@@ -20,7 +20,7 @@ import { useUpdateQuery } from '@/components/hooks/queries/useUpdateQuery';
 import { RefreshCw } from '@/components/icons';
 import { getRandomChars } from '@/lib/generate';
 import type { LinkFormData } from '@/lib/types';
-import { isValidUrl } from '@/lib/url';
+import { isValidUrl, extractHostname } from '@/lib/url';
 
 const generateId = () => getRandomChars(9);
 
@@ -43,19 +43,22 @@ export function LinkEditForm({
       teamId,
     },
   );
-  const { getSlugUrl } = useSlug('link');
+  const { getSlugUrl, hostUrl } = useSlug('link');
   const { data, isLoading } = useLinkQuery(linkId);
   const activeTeamId = teamId ?? data?.teamId ?? undefined;
   const [domainSearch, setDomainSearch] = useState('');
   const [slug, setSlug] = useState(generateId());
-  const [selectedDomainId, setSelectedDomainId] = useState<string>('none');
+  const [selectedDomainId, setSelectedDomainId] = useState<string>('default');
   const { data: domainResult, isLoading: isDomainsLoading } = useUserDomainsQuery(
     { teamId: activeTeamId },
     { search: domainSearch, page: 1, pageSize: 50 },
   );
   const domains = domainResult?.data || [];
+
+  // Extract default domain from hostUrl
+  const defaultDomainName = extractHostname(hostUrl);
   const domainOptions = [
-    { id: 'none', name: formatMessage(labels.none) },
+    { id: 'default', name: `${defaultDomainName} (${formatMessage(labels.default)})` },
     ...domains.map(domain => ({ id: domain.id, name: domain.name })),
   ];
 
@@ -95,7 +98,7 @@ export function LinkEditForm({
     if (data?.domainId) {
       setSelectedDomainId(data.domainId);
     } else {
-      setSelectedDomainId('none');
+      setSelectedDomainId('default');
     }
   }, [data?.domainId]);
 
@@ -104,14 +107,14 @@ export function LinkEditForm({
     setValue: (name: string, value: unknown, options?: { shouldDirty?: boolean }) => void,
   ) => {
     setSelectedDomainId(value);
-    setValue('domainId', value === 'none' ? null : value, { shouldDirty: true });
+    setValue('domainId', value === 'default' ? null : value, { shouldDirty: true });
   };
 
   const selectedDomain =
-    selectedDomainId !== 'none'
+    selectedDomainId !== 'default'
       ? domains.find(domain => domain.id === selectedDomainId) ?? data?.domain
       : null;
-  const selectedDomainName = selectedDomain?.name || formatMessage(labels.none);
+  const selectedDomainName = selectedDomain?.name || `${defaultDomainName} (${formatMessage(labels.default)})`;
   const slugUrl = getSlugUrl(slug, selectedDomain?.name);
 
   if (linkId && isLoading) {
