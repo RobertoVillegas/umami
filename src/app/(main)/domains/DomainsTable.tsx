@@ -1,65 +1,43 @@
 'use client';
-import type { ColumnDef } from '@tanstack/react-table';
-import { DataTable, Row } from '@umami/react-zen';
+import { DataColumn, DataTable, type DataTableProps, Row } from '@umami/react-zen';
 import { DateDistance } from '@/components/common/DateDistance';
 import { useMessages } from '@/components/hooks';
 import { DomainEditButton } from './DomainEditButton';
 import { DomainDeleteButton } from './DomainDeleteButton';
 import { DomainVerifyButton } from './DomainVerifyButton';
 
-export function DomainsTable({ data = [] }: { data: any[] }) {
+export function DomainsTable(props: DataTableProps) {
   const { formatMessage, labels } = useMessages();
 
-  const columns: ColumnDef<any>[] = [
-    {
-      id: 'name',
-      header: formatMessage(labels.name),
-      cell: ({ row }) => {
-        const { name, isPrimary, verified } = row.original;
-        return (
+  return (
+    <DataTable {...props}>
+      <DataColumn id="name" label={formatMessage(labels.name)}>
+        {({ name, isPrimary, verified }: any) => (
           <div>
             {isPrimary && <span title="Primary">⭐ </span>}
             {name}
             {verified ? ' ✓' : ' ⚠'}
           </div>
-        );
-      },
-    },
-    {
-      id: 'description',
-      header: formatMessage(labels.description),
-      accessorKey: 'description',
-    },
-    {
-      id: 'stats',
-      header: formatMessage(labels.links),
-      cell: ({ row }) => {
-        const { _count } = row.original;
-        return _count?.links || 0;
-      },
-    },
-    {
-      id: 'created',
-      header: formatMessage(labels.created),
-      cell: ({ row }) => {
-        return <DateDistance date={new Date(row.original.createdAt)} />;
-      },
-    },
-    {
-      id: 'action',
-      header: formatMessage(labels.actions),
-      cell: ({ row }) => {
-        const { id, name, verified } = row.original;
-        return (
+        )}
+      </DataColumn>
+      <DataColumn id="description" label={formatMessage(labels.description)}>
+        {({ description }: any) => description}
+      </DataColumn>
+      <DataColumn id="stats" label={formatMessage(labels.links)}>
+        {({ _count }: any) => _count?.links || 0}
+      </DataColumn>
+      <DataColumn id="created" label={formatMessage(labels.created)}>
+        {(row: any) => <DateDistance date={new Date(row.createdAt)} />}
+      </DataColumn>
+      <DataColumn id="action" align="end" width="120px">
+        {({ id, name, verified }: any) => (
           <Row>
             {!verified && <DomainVerifyButton domainId={id} />}
             <DomainEditButton domainId={id} />
             <DomainDeleteButton domainId={id} name={name} />
           </Row>
-        );
-      },
-    },
-  ];
-
-  return <DataTable columns={columns} data={data} />;
+        )}
+      </DataColumn>
+    </DataTable>
+  );
 }
