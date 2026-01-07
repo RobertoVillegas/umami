@@ -1,3 +1,4 @@
+export * from './domain';
 export * from './link';
 export * from './pixel';
 export * from './report';

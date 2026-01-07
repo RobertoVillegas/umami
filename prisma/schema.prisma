@@ -25,10 +25,39 @@ model User {
   createdBy Website[]  @relation("createUser")
   links     Link[]     @relation("user")
   pixels    Pixel[]    @relation("user")
+  domains   Domain[]   @relation("userDomains")
   teams     TeamUser[]
   reports   Report[]
 
   @@map("user")
+}
+
+model Domain {
+  id             String    @id() @unique() @map("domain_id") @db.Uuid
+  name           String    @unique() @db.VarChar(255)
+  description    String?   @db.VarChar(500)
+  isPrimary      Boolean   @default(false) @map("is_primary")
+  verified       Boolean   @default(false)
+  verifiedAt     DateTime? @map("verified_at") @db.Timestamptz(6)
+  lastCheckedAt  DateTime? @map("last_checked_at") @db.Timestamptz(6)
+  userId         String?   @map("user_id") @db.Uuid
+  teamId         String?   @map("team_id") @db.Uuid
+  createdAt      DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user   User?   @relation("userDomains", fields: [userId], references: [id])
+  team   Team?   @relation("teamDomains", fields: [teamId], references: [id])
+  links  Link[]  @relation("domainLinks")
+  pixels Pixel[] @relation("domainPixels")
+
+  @@index([name])
+  @@index([userId])
+  @@index([teamId])
+  @@index([verified])
+  @@index([isPrimary])
+  @@index([createdAt])
+  @@map("domain")
 }
 
 model Session {
@@ -199,6 +228,7 @@ model Team {
   members  TeamUser[]
   links    Link[]
   pixels   Pixel[]
+  domains  Domain[]   @relation("teamDomains")
 
   @@index([accessCode])
   @@map("team")
@@ -281,16 +311,19 @@ model Link {
   name      String    @db.VarChar(100)
   url       String    @db.VarChar(500)
   slug      String    @unique() @db.VarChar(100)
+  domainId  String?   @map("domain_id") @db.Uuid
   userId    String?   @map("user_id") @db.Uuid
   teamId    String?   @map("team_id") @db.Uuid
   createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  user User? @relation("user", fields: [userId], references: [id])
-  team Team? @relation(fields: [teamId], references: [id])
+  domain Domain? @relation("domainLinks", fields: [domainId], references: [id], onDelete: SetNull)
+  user   User?   @relation("user", fields: [userId], references: [id])
+  team   Team?   @relation(fields: [teamId], references: [id])
 
   @@index([slug])
+  @@index([domainId])
   @@index([userId])
   @@index([teamId])
   @@index([createdAt])
@@ -301,16 +334,19 @@ model Pixel {
   id        String    @id() @unique() @map("pixel_id") @db.Uuid
   name      String    @db.VarChar(100)
   slug      String    @unique() @db.VarChar(100)
+  domainId  String?   @map("domain_id") @db.Uuid
   userId    String?   @map("user_id") @db.Uuid
   teamId    String?   @map("team_id") @db.Uuid
   createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  user User? @relation("user", fields: [userId], references: [id])
-  team Team? @relation(fields: [teamId], references: [id])
+  domain Domain? @relation("domainPixels", fields: [domainId], references: [id], onDelete: SetNull)
+  user   User?   @relation("user", fields: [userId], references: [id])
+  team   Team?   @relation(fields: [teamId], references: [id])
 
   @@index([slug])
+  @@index([domainId])
   @@index([userId])
   @@index([teamId])
   @@index([createdAt])
