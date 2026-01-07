@@ -3,7 +3,7 @@ import { parseRequest } from '@/lib/request';
 import { json, unauthorized } from '@/lib/response';
 import { canUpdateDomain } from '@/permissions';
 import { getDomain, updateDomainVerification } from '@/queries/prisma';
-import { verifyDomainDNS } from '@/lib/dns';
+import { verifyDomainDNS } from '@/lib/dns.server';
 
 export async function POST(
   request: Request,
