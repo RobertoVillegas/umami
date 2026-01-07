@@ -6,18 +6,25 @@ export interface DNSInstructions {
 }
 
 export function getInstanceHostname(): string {
-  if (process.env.UMAMI_HOST) {
-    return process.env.UMAMI_HOST;
+  const envHost = process.env.NEXT_PUBLIC_UMAMI_HOST || process.env.UMAMI_HOST;
+  if (envHost) {
+    return envHost;
   }
 
-  if (process.env.LINKS_URL) {
+  const linksUrl = process.env.NEXT_PUBLIC_LINKS_URL || process.env.LINKS_URL;
+  if (linksUrl) {
     try {
-      const url = new URL(process.env.LINKS_URL);
+      const url = new URL(linksUrl);
       return url.hostname;
     } catch (e) {
       console.warn('Could not parse LINKS_URL, using localhost');
       return 'localhost';
     }
+  }
+
+  const browserHost = globalThis?.location?.hostname;
+  if (browserHost) {
+    return browserHost;
   }
 
   console.warn('UMAMI_HOST not configured, using localhost for DNS verification');

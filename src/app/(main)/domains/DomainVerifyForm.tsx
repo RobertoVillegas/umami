@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import { useDomainQuery, useMessages, useApi } from '@/components/hooks';
 import { RefreshCw } from '@/components/icons';
 import { getInstanceHostname, parseDomain, getDNSInstructions } from '@/lib/dns';
+import type { ApiError, DomainVerifyResult } from '@/lib/types';
 
 export function DomainVerifyForm({
   domainId,
@@ -27,7 +28,7 @@ export function DomainVerifyForm({
   const { data, isLoading, refetch } = useDomainQuery(domainId);
   const { post } = useApi();
   const [isVerifying, setIsVerifying] = useState(false);
-  const [verifyResult, setVerifyResult] = useState<any>(null);
+  const [verifyResult, setVerifyResult] = useState<DomainVerifyResult | null>(null);
 
   const dnsInstructions = data ? getDNSInstructions(data.name) : null;
   const instanceHost = getInstanceHostname();
@@ -37,14 +38,15 @@ export function DomainVerifyForm({
     setVerifyResult(null);
 
     try {
-      const result = await post(`/domains/${domainId}/verify`);
+      const result = (await post(`/domains/${domainId}/verify`)) as DomainVerifyResult;
       setVerifyResult(result);
 
       if (result.verified) {
         refetch();
       }
-    } catch (error: any) {
-      setVerifyResult({ error: error.message || formatMessage(messages.error) });
+    } catch (error: unknown) {
+      const message = getErrorMessage(error as ApiError) || formatMessage(messages.error);
+      setVerifyResult({ verified: false, error: message });
     } finally {
       setIsVerifying(false);
     }
@@ -68,21 +70,23 @@ export function DomainVerifyForm({
           <Label>{formatMessage(labels.dnsDescription)}</Label>
 
           <Column>
-            <Row>
-              <TextField
-                label={formatMessage(labels.dnsType)}
-                value={dnsInstructions.type}
-                isReadOnly
-                allowCopy
-                style={{ flex: 1 }}
-              />
-              <TextField
-                label={formatMessage(labels.dnsName)}
-                value={dnsInstructions.name}
-                isReadOnly
-                allowCopy
-                style={{ flex: 1 }}
-              />
+            <Row gap="4">
+              <Column style={{ flex: 1 }}>
+                <TextField
+                  label={formatMessage(labels.dnsType)}
+                  value={dnsInstructions.type}
+                  isReadOnly
+                  allowCopy
+                />
+              </Column>
+              <Column style={{ flex: 1 }}>
+                <TextField
+                  label={formatMessage(labels.dnsName)}
+                  value={dnsInstructions.name}
+                  isReadOnly
+                  allowCopy
+                />
+              </Column>
             </Row>
             <TextField
               label={formatMessage(labels.dnsValue)}

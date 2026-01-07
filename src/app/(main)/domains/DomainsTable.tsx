@@ -2,17 +2,22 @@
 import { DataColumn, DataTable, type DataTableProps, Row } from '@umami/react-zen';
 import { DateDistance } from '@/components/common/DateDistance';
 import { useMessages } from '@/components/hooks';
+import type { Domain } from '@/lib/types';
 import { DomainEditButton } from './DomainEditButton';
 import { DomainDeleteButton } from './DomainDeleteButton';
 import { DomainVerifyButton } from './DomainVerifyButton';
 
-export function DomainsTable(props: DataTableProps) {
+export interface DomainsTableProps extends DataTableProps {
+  data?: Domain[];
+}
+
+export function DomainsTable(props: DomainsTableProps) {
   const { formatMessage, labels } = useMessages();
 
   return (
     <DataTable {...props}>
       <DataColumn id="name" label={formatMessage(labels.name)}>
-        {({ name, isPrimary, verified }: any) => (
+        {({ name, isPrimary, verified }: Domain) => (
           <div>
             {isPrimary && <span title="Primary">⭐ </span>}
             {name}
@@ -21,16 +26,16 @@ export function DomainsTable(props: DataTableProps) {
         )}
       </DataColumn>
       <DataColumn id="description" label={formatMessage(labels.description)}>
-        {({ description }: any) => description}
+        {({ description }: Domain) => description}
       </DataColumn>
       <DataColumn id="stats" label={formatMessage(labels.links)}>
-        {({ _count }: any) => _count?.links || 0}
+        {({ _count }: Domain) => _count?.links || 0}
       </DataColumn>
       <DataColumn id="created" label={formatMessage(labels.created)}>
-        {(row: any) => <DateDistance date={new Date(row.createdAt)} />}
+        {(row: Domain) => <DateDistance date={new Date(row.createdAt)} />}
       </DataColumn>
       <DataColumn id="action" align="end" width="120px">
-        {({ id, name, verified }: any) => (
+        {({ id, name, verified }: Domain) => (
           <Row>
             {!verified && <DomainVerifyButton domainId={id} />}
             <DomainEditButton domainId={id} />

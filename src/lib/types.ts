@@ -117,6 +117,39 @@ export interface PageResult<T> {
   search?: string;
 }
 
+export interface DomainLinksCount {
+  links?: number;
+}
+
+export interface Domain {
+  id: string;
+  name: string;
+  description: string | null;
+  isPrimary: boolean;
+  verified: boolean;
+  verifiedAt: string | Date | null;
+  lastCheckedAt: string | Date | null;
+  userId: string;
+  teamId: string | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  deletedAt: string | Date | null;
+  _count?: DomainLinksCount | null;
+}
+
+export interface DomainFormData {
+  name: string;
+  description?: string | null;
+  isPrimary?: boolean;
+}
+
+export interface DomainVerifyResult {
+  verified: boolean;
+  cnameTarget?: string | null;
+  error?: string | null;
+  details?: string | null;
+}
+
 export interface RealtimeData {
   countries: Record<string, number>;
   events: any[];

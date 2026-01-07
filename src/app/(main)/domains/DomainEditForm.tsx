@@ -13,6 +13,7 @@ import {
 import { useDomainQuery, useMessages } from '@/components/hooks';
 import { useUpdateQuery } from '@/components/hooks/queries/useUpdateQuery';
 import { isValidDomain } from '@/lib/dns';
+import type { DomainFormData } from '@/lib/types';
 
 export function DomainEditForm({
   domainId,
@@ -35,7 +36,7 @@ export function DomainEditForm({
   );
   const { data, isLoading } = useDomainQuery(domainId);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: DomainFormData) => {
     await mutateAsync(data, {
       onSuccess: async () => {
         toast(formatMessage(messages.saved));
